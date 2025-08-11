@@ -220,7 +220,7 @@ void process_program_flash_from_file(cl_my_params& m_arg_my_params, serial_com& 
 	uint32_t m_i;
 	size_t m_bytes_read;
 	bool m_is_blank = false;
-	unsigned char m_retry_count = 0;
+	unsigned int m_retry_count = 0;
 	uint32_t m_num_blocks;
 	uint32_t m_file_to_block_start_offset;
 	uint32_t m_file_to_block_size;
@@ -324,8 +324,13 @@ void process_program_flash_from_file(cl_my_params& m_arg_my_params, serial_com& 
 						// Exit the for loop
 						break;
 					}else{
+						std::cout << "Max retry of" << m_arg_my_params.m_num_erase_program_error_retry << " reached" << std::endl;
 						return;
 					}
+				}
+				else
+				{
+					m_retry_count = 0;
 				}
 			}
 		}while(m_retry_count > 0);
@@ -382,13 +387,24 @@ void process_cmd_line(cl_my_params& m_arg_my_params){
 	bool m_is_blank;
 
 	m_serial_com.open_handle(m_arg_my_params.m_dev_path);  // Open serial COM port
-	m_serial_com.set_timeout(5000);
-	// Set serial com device baudrate and parameters
-	m_serial_com.set_params(m_arg_my_params.m_baud_rate, 8, NOPARITY, ONESTOPBIT, false);
-	// Set MCU baudrate
-	m_m16c_cmd.set_baud_rate(m_serial_com, m_arg_my_params.m_baud_rate);
+
+	if (m_arg_my_params.m_cmd != CMD_AUTO_BAUD) {
+		m_serial_com.set_timeout(5000);
+		// Set serial com device baudrate and parameters
+		m_serial_com.set_params(m_arg_my_params.m_baud_rate, 8, NOPARITY, ONESTOPBIT, false);
+
+		// Set MCU baudrate
+		m_m16c_cmd.set_baud_rate(m_serial_com, m_arg_my_params.m_baud_rate);
+	}
 
 	switch(m_arg_my_params.m_cmd){
+		case CMD_AUTO_BAUD:
+			m_serial_com.set_timeout(500);
+			m_serial_com.set_params(9600, 8, NOPARITY, ONESTOPBIT, false);
+			m_m16c_cmd.auto_baud(m_serial_com);
+			m_m16c_cmd.set_baud_rate(m_serial_com, m_arg_my_params.m_baud_rate);
+			std::cout << "OK: " << m_arg_my_params.m_baud_rate << std::endl;
+			break;
 		case CMD_VER:
 			m_m16c_cmd.rd_version(m_serial_com);
 			m_ver_str.assign((char*)m_m16c_cmd.m_ver, 8);
