@@ -25,6 +25,28 @@ unsigned char cl_m16c_cmd::baud_rate_cmd_code(uint32_t m_arg_baud_rate){
 	return 0;
 }
 
+void cl_m16c_cmd::autobaud(serial_com& m_arg_serial_com) {
+	unsigned char m_null_byte = 0;
+	unsigned char m_rx_data;
+
+	for (int i = 0; i < 16; i++)
+	{
+		// Send set baud rate command
+		if (m_arg_serial_com.write_port(&m_null_byte, 1) < 1) {
+			throw tru_exception(__func__, TRU_EXCEPT_SRC_VEN, APP_ERROR_TX_FAIL_ID, app_error_string::messages[APP_ERROR_TX_FAIL_ID], "");
+		}
+
+#if defined(WIN32) || defined(WIN64)
+		Sleep(SLEEP_AUTOBAUD_INTERVAL);
+#else
+		usleep(SLEEP_AUTOBAUD_INTERVAL * 1000);
+#endif
+	}
+
+	// Read back and throw away the value
+	m_arg_serial_com.read_port(&m_rx_data, 1);
+}
+
 void cl_m16c_cmd::set_baud_rate(serial_com& m_arg_serial_com, uint32_t m_arg_baud_rate){
 	unsigned char m_baud_rate_cmd_code = baud_rate_cmd_code(m_arg_baud_rate);
 	unsigned char m_rx_data;
