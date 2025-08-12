@@ -29,8 +29,8 @@ void cl_m16c_cmd::auto_baud(serial_com& m_arg_serial_com) {
 	unsigned char m_null_byte = 0;
 	unsigned char m_rx_data;
 
-	// Send a 0x00 byte 16 times with 40ms delay as per "Easy R8C/M16C/M32C/R32C Flash Programming" PDF
-	for (int i = 0; i < 16; i++)
+	// Send a 0x00 byte 2*16 times with 40ms delay (double the number of times specified in "Easy R8C/M16C/M32C/R32C Flash Programming" PDF, but needed on the tested M30260F8)
+	for (int i = 0; i < 32; i++)
 	{
 		if (m_arg_serial_com.write_port(&m_null_byte, 1) < 1) {
 			throw tru_exception(__func__, TRU_EXCEPT_SRC_VEN, APP_ERROR_TX_FAIL_ID, app_error_string::messages[APP_ERROR_TX_FAIL_ID], "");

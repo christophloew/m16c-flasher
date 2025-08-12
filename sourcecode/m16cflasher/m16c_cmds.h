@@ -4,9 +4,9 @@
 #include "serial_com.h"
 #include "my_buf.h"
 
-#define DEFAULT_BAUD_RATE 9600
+#define DEFAULT_BAUD_RATE 57600
 
-#define SLEEP_CMD_INTERVAL 50
+#define SLEEP_CMD_INTERVAL 5
 #define SLEEP_AUTO_BAUD_INTERVAL 40
 
 #define M16C_BL_CMD_CODE_9600                  0xB0
