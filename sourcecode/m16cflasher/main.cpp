@@ -383,24 +383,25 @@ void process_cmd_line(cl_my_params& m_arg_my_params){
 
 	m_serial_com.open_handle(m_arg_my_params.m_dev_path);  // Open serial COM port
 
-	// Set serial com device baudrate and parameters for autobaud
-	m_serial_com.set_timeout(500);
-	m_serial_com.set_params(m_arg_my_params.m_baud_rate, 8, NOPARITY, ONESTOPBIT, false);
-	
-	// Check if we need to perform autobaud by tying to set baud rate to default
-	try
-	{
-		m_m16c_cmd.set_baud_rate(m_serial_com, DEFAULT_BAUD_RATE);
-	}
-	catch (tru_exception& ex) {
-		// perform autobaud sequence
-		m_m16c_cmd.autobaud(m_serial_com);
+	// Check if we need to perform auto-baud (his only makes sense if the user built this tool for 9600 baud)
+	// - set timeout to .5 seconds which is enought for these devices
+	// - try to set baud rate
+	// - if this fails, perform auto-baud which will set the device up for 9600 baud
+	if (m_arg_my_params.m_baud_rate == 9600){
+		m_serial_com.set_timeout(500);
+		// Set serial com device baudrate and parameters
+		m_serial_com.set_params(m_arg_my_params.m_baud_rate, 8, NOPARITY, ONESTOPBIT, false);
+
+		try{
+			m_m16c_cmd.set_baud_rate(m_serial_com, m_arg_my_params.m_baud_rate);
+		}catch (tru_exception&){
+			m_m16c_cmd.auto_baud(m_serial_com);
+		}
 	}
 
-	// Set serial com device baudrate and parameters for normal operation
 	m_serial_com.set_timeout(5000);
+	// Set serial com device baudrate and parameters
 	m_serial_com.set_params(m_arg_my_params.m_baud_rate, 8, NOPARITY, ONESTOPBIT, false);
-
 	// Set MCU baudrate
 	m_m16c_cmd.set_baud_rate(m_serial_com, m_arg_my_params.m_baud_rate);
 
