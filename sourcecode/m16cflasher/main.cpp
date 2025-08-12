@@ -15,6 +15,7 @@
 #include "my_file.h"
 #include "my_buf.h"
 #include "m16c_mem_map.h"
+#include "app_error_string.h"
 #include <stdio.h>
 #include <iostream>
 
@@ -237,13 +238,6 @@ void process_program_flash_from_file(cl_my_params& m_arg_my_params, serial_com& 
 		process_blank_check(m_arg_my_params, m_arg_serial_com, m_arg_m16c_cmd, m_is_blank);
 	}
 
-	// Need to erase?
-	/*
-	if(m_arg_my_params.m_is_erase_before_program && !m_is_blank){
-		process_erase_blocks(m_arg_my_params, m_arg_serial_com, m_arg_m16c_cmd, m_arg_my_params.m_from_addr, m_arg_my_params.m_to_addr);
-	}
-	*/
-
 	std::cout << "Total range to program: 0x" << string_utils_ns::to_string_right_hex(m_arg_my_params.m_from_addr, 6, '0') << " to 0x" << string_utils_ns::to_string_right_hex(m_arg_my_params.m_to_addr, 6, '0') << std::endl;
 
 	// Iterate flash block list
@@ -280,19 +274,20 @@ void process_program_flash_from_file(cl_my_params& m_arg_my_params, serial_com& 
 		}
 
 		// Iterate block pages (256 bytes at a time) and program (flash)
-		do{
-			std::cout <<
-				"Block " <<
-				m_iter->m_block_name << " (0x" << string_utils_ns::to_string_right_hex(m_iter->m_block_begin, 6, '0') <<
-				" to 0x" << string_utils_ns::to_string_right_hex(m_iter->m_block_end, 6, '0') <<
-				", " <<
-				m_iter->m_block_size <<
-				" bytes)" <<
-				std::endl;
+		std::cout <<
+			"Block " <<
+			m_iter->m_block_name << " (0x" << string_utils_ns::to_string_right_hex(m_iter->m_block_begin, 6, '0') <<
+			" to 0x" << string_utils_ns::to_string_right_hex(m_iter->m_block_end, 6, '0') <<
+			", " <<
+			m_iter->m_block_size <<
+			" bytes)" <<
+			std::endl;
 
-			m_num_blocks = m_iter->m_block_size / 256;
-			// Iterate a page
-			for(m_i = 0; m_i < m_num_blocks; ++m_i){
+		m_num_blocks = m_iter->m_block_size / 256;
+
+		// Iterate a page
+		for(m_i = 0; m_i < m_num_blocks; ++m_i){
+			do{
 				std::cout << "Programming: 0x" << string_utils_ns::to_string_right_hex(m_iter->m_block_begin + m_i * 256, 6, '0') << " to 0x" << string_utils_ns::to_string_right_hex(m_iter->m_block_begin + m_i * 256 + 255, 6, '0') << std::endl;
 
 				// Flash memory
@@ -316,24 +311,20 @@ void process_program_flash_from_file(cl_my_params& m_arg_my_params, serial_com& 
 
 					if(m_retry_count < m_arg_my_params.m_num_erase_program_error_retry){
 						++m_retry_count;
-						std::cout << "Retrying (" << m_retry_count << " of " << m_arg_my_params.m_num_erase_program_error_retry << ")" << std::endl;
+						std::cout << "Retrying (" << m_retry_count << " of " << m_arg_my_params.m_num_erase_program_error_retry << ") block " << m_i << std::endl;
 
 						process_clear_status(m_arg_my_params, m_arg_serial_com, m_arg_m16c_cmd);
-						process_erase_blocks(m_arg_my_params, m_arg_serial_com, m_arg_m16c_cmd, m_iter->m_block_begin, m_iter->m_block_end);
-
-						// Exit the for loop
-						break;
 					}else{
-						std::cout << "Max retry of" << m_arg_my_params.m_num_erase_program_error_retry << " reached" << std::endl;
-						return;
+						std::cout << "Max retry of " << m_arg_my_params.m_num_erase_program_error_retry << " reached" << std::endl;
+						throw tru_exception(__func__, TRU_EXCEPT_SRC_VEN, APP_ERROR_RETRY, app_error_string::messages[APP_ERROR_RETRY], "");
 					}
 				}
 				else
 				{
 					m_retry_count = 0;
 				}
-			}
-		}while(m_retry_count > 0);
+			}while(m_retry_count > 0);
+		}
 	}
 }
 

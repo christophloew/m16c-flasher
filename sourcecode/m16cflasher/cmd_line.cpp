@@ -131,11 +131,11 @@ void usage(char* m_arg_0){
 }
 
 bool parse_params_search(char* m_arg_cmdl_param, cl_my_params& m_arg_my_params){
-	if (parse_param_exist(m_arg_cmdl_param, "autobaud")) {
+	if(parse_param_exist(m_arg_cmdl_param, "autobaud")){
 		m_arg_my_params.m_cmd = CMD_AUTO_BAUD;
 		return true;
 	}
-	if (parse_param_exist(m_arg_cmdl_param, "ver")) {
+	if(parse_param_exist(m_arg_cmdl_param, "ver")){
 		m_arg_my_params.m_cmd = CMD_VER;
 		return true;
 	}

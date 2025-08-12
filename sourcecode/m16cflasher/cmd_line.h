@@ -46,7 +46,7 @@ public:
 		m_to_addr(0),
 		m_is_blank_chk_before_program(false),
 		m_is_erase_before_program(false),
-		m_num_erase_program_error_retry(1){
+		m_num_erase_program_error_retry(3){
 	}
 };
 
